@@ -85,8 +85,24 @@ function M:get_completions(ctx, callback)
 
             local items = {}
             for _, result in ipairs(new_data) do
+                local line_entry = vim.split(result, '\n')
+                local item_label = nil
+                if #line_entry == 1 then
+                    item_label = result .. ' [single]'
+                else
+                    for _, line in ipairs(line_entry) do
+                        line = utils.remove_spaces({ line })[1]
+                        if line and line ~= '' then
+                            item_label = line .. ' [full]'
+                            break
+                        end
+                    end
+                end
                 table.insert(items, {
-                    label = result,
+                    label = item_label,
+                    filterText = result,
+                    insertText = result .. '$0',
+                    insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet,
                     documentation = {
                         kind = 'markdown',
                         value = '```' .. (vim.bo.ft or '') .. '\n' .. result .. '\n```',
