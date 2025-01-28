@@ -1,6 +1,15 @@
 local M = {}
 local config = require('minuet').config
 local utils = require 'minuet.utils'
+local max_label_width = nil
+
+local has_blink = pcall(require, 'blink.cmp.config')
+
+if has_blink then
+    max_label_width = require('blink.cmp.config').completion.menu.draw.components.label.width.max
+else
+    vim.notify('Please install blink.cmp!', vim.log.levels.ERROR)
+end
 
 if vim.tbl_isempty(vim.api.nvim_get_hl(0, { name = 'BlinkCmpItemKindMinuet' })) then
     vim.api.nvim_set_hl(0, 'BlinkCmpItemKindMinuet', { link = 'BlinkCmpItemKind' })
@@ -88,12 +97,13 @@ function M:get_completions(ctx, callback)
                 local line_entry = vim.split(result, '\n')
                 local item_label = nil
                 if #line_entry == 1 then
-                    item_label = result .. ' [single]'
+                    item_label = result
                 else
                     for _, line in ipairs(line_entry) do
                         line = utils.remove_spaces({ line })[1]
                         if line and line ~= '' then
-                            item_label = line .. ' [full]'
+                            line = utils.truncate_text(line, max_label_width - 3)
+                            item_label = line
                             break
                         end
                     end
